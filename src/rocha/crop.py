@@ -13,7 +13,7 @@ import fiona
 import rasterio
 import rasterio.mask
 
-def prop(vector, column, layer = 0):
+def properties(vector, layer = 0):
     """
     Vector property data.
 
@@ -23,23 +23,21 @@ def prop(vector, column, layer = 0):
     ----------
     vector : str
         Vector filename.
-    column : str
-        Column name in vector properties.
     layer : int or str
         Vector layer index or layer name (the default is 0 for the first layer).
 
     Yields
     ------
-    value : int, float or str
-        Feature property from column.
+    values : dict of {str : int, float, str or date}
+        Feature properties from all column.
     """
-    with fiona.open(vector, layer = layer) as shapefile:
-        for feature in shapefile:
-            value = feature["properties"][column]
+    with fiona.open(vector, layer = layer) as source:
+        for feature in source:
+            values = feature["properties"]
 
-            yield value
+            yield values
 
-def geom(vector, layer = 0):
+def geometries(vector, layer = 0):
     """
     Vector spatial data.
 
@@ -57,8 +55,8 @@ def geom(vector, layer = 0):
     geometries : dict
         Geometries as type and coordinates.
     """
-    with fiona.open(vector, layer = layer) as shapefile:
-        for feature in shapefile:
+    with fiona.open(vector, layer = layer) as source:
+        for feature in source:
             geometry = feature["geometry"]
 
             yield geometry

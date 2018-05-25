@@ -9,6 +9,7 @@
 .. moduleauthor:: Andre Rocha <rocha.matcomp@gmail.com>
 """
 
+import fiona
 import src.rocha.crop as crop
 
 def test_column_string():
@@ -19,14 +20,10 @@ def test_column_string():
     column = "REGION"
     names = ["mid-west", "northeast", "southeast", "south"]
 
-    properties = crop.prop(vector, column)
+    properties = crop.properties(vector)
 
-    for name in properties:
-        if isinstance(name, str):
-            assert name.lower() in names
-        else:
-            message = f'The vector property should be str, but is {type(name)}'
-            raise AssertionError(message)
+    results = [property[column].lower() for property in properties if isinstance(property[column], str)]
+    assert results == names
 
 def test_column_number():
     """
@@ -34,13 +31,25 @@ def test_column_number():
     """
     vector = "data/regions.shp"
     column = "ID"
-    codes = [5, 2, 4, 3]
+    codes = [5, 2, 3, 4]
 
-    properties = crop.prop(vector, column)
+    properties = crop.properties(vector)
 
-    for code in properties:
-        if isinstance(code, (int, float)):
-            assert code in codes
-        else:
-            message = f'The vector property should be int or float, but is {type(code)}'
-            raise AssertionError(message)
+    results = [property[column] for property in properties if isinstance(property[column], (int, float))]
+    assert results == codes
+
+def test_geometry():
+    """
+    Test vector geometry.
+    """
+
+    vector = "data/regions.shp"
+    subvectors = ["data/region_mid-west.shp", "data/region_northeast.shp", "data/region_southeast.shp", "data/region_south.shp"]
+
+    geometries = crop.geometries(vector)
+
+    for subvector, geometry in zip(subvectors, geometries):
+        with fiona.open(subvector, layer = 0) as source:
+            feature = next(source)
+
+        assert feature["geometry"] == geometry
