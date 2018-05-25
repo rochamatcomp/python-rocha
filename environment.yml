@@ -1,0 +1,9 @@
+name: rocha
+channels:
+  - conda-forge
+dependencies:
+	- python
+	- pytest
+	- numpy
+	- rasterio
+	- fiona
