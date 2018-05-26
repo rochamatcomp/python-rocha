@@ -76,8 +76,11 @@ def crop(geometries, raster, features = False):
 
     Yields
     ------
-    dataset :
-        Raster dataset.
+    image : array
+        Raster data.
+
+    transform : affine
+        Raster affine transform.
     """
     if features:
         for geometry in geometries:
