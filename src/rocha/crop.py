@@ -60,3 +60,35 @@ def geometries(vector, layer = 0):
             geometry = feature["geometry"]
 
             yield geometry
+
+def crop(geometries, raster, features = False):
+    """
+    Crop raster dataset by vector geometries.
+
+    Parameters
+    ----------
+    geometries : str
+        Vector geometries.
+    raster : str
+        Raster filename.
+    features : bool
+        Crop by foreach features. False: crop global, True: crop individual.
+
+    Yields
+    ------
+    dataset :
+        Raster dataset.
+    """
+    if features:
+        for geometry in geometries:
+            shapes = [geometry]
+            with rasterio.open(raster) as source:
+                image, transform = rasterio.mask.mask(source, shapes, crop = True)
+
+            yield image, transform
+    else:
+        shapes = [geometry for geometry in geometries]
+        with rasterio.open(raster) as source:
+            image, transform = rasterio.mask.mask(source, shapes, crop = True)
+
+        yield image, transform

@@ -5,11 +5,12 @@
 
 .. module:: crop
     :platform: Unix, Windows
-    :synopsis: Tests of the crop the raster datasets by vector geometries.
+    :synopsis: Tests of the crop the raster datasets for vector geometries.
 .. moduleauthor:: Andre Rocha <rocha.matcomp@gmail.com>
 """
 
 import fiona
+import rasterio
 import src.rocha.crop as crop
 
 def test_column_string():
@@ -53,3 +54,44 @@ def test_geometry():
             feature = next(source)
 
         assert feature["geometry"] == geometry
+
+def test_crop_global():
+    """
+    Test crop raster for vector extern boundary.
+    """
+
+    vector = "data/regions.shp"
+    raster = "data/forest.tif"
+
+    geometries = crop.geometries(vector)
+    results = crop.crop(geometries, raster, features = False)
+
+    result, transform = next(results)
+
+    with rasterio.open(raster) as source:
+        data = source.read(1)
+        affine = source.affine
+
+    assert result.all() == data.all()
+    assert transform == affine
+
+
+def test_crop_individual():
+    """
+    Test crop raster for each vector feature boundary.
+    """
+
+    vector = "data/regions.shp"
+    raster = "data/forest.tif"
+    subrasters = ["data/forest_mid-west.tif", "data/forest_northeast.tif", "data/forest_southeast.tif", "data/forest_south.tif"]
+
+    geometries = crop.geometries(vector)
+    results = crop.crop(geometries, raster, features = True)
+
+    for subraster, (result, transform) in zip(subrasters, results):
+        with rasterio.open(subraster) as source:
+            data = source.read(1)
+            affine = source.affine
+
+        assert result.all() == data.all()
+        assert transform == affine
