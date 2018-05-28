@@ -109,7 +109,7 @@ def crop(geometries, raster, features = False):
         Raster filename.
 
     features : bool
-        Crop by foreach features. False: crop global, True: crop individual.
+        Crop by foreach features. False: crop global, True: crop individual (default).
 
     Yields
     ------
