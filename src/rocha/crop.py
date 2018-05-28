@@ -8,7 +8,7 @@
     :synopsis: Crop the raster datasets by vector geometries.
 .. moduleauthor:: Andre Rocha <rocha.matcomp@gmail.com>
 """
-
+import affine
 import fiona
 import rasterio
 import rasterio.mask
@@ -61,6 +61,41 @@ def geometries(vector, layer = 0):
 
             yield geometry
 
+def mask(geometries, raster):
+    """
+    Mask raster dataset by vector geometries.
+
+    Parameters
+    ----------
+    geometries : str
+        Vector geometries.
+
+    raster : str
+        Raster filename.
+
+    Returns
+    -------
+    data : array
+        Raster data.
+
+    profile : dict
+        Raster profile.
+    """
+    with rasterio.open(raster) as source:
+        data, transform = rasterio.mask.mask(source, geometries, crop = True)
+
+        # Update the mask
+        data.mask = (data == source.nodata) | data.mask
+
+        # Profile for cropped raster
+        profile = source.profile.copy()
+        profile.update({'height': data.shape[1],
+                        'width': data.shape[2],
+                        'transform': transform,
+                        'affine': transform})
+
+    return data, profile
+
 def crop(geometries, raster, features = False):
     """
     Crop raster dataset by vector geometries.
@@ -69,29 +104,32 @@ def crop(geometries, raster, features = False):
     ----------
     geometries : str
         Vector geometries.
+
     raster : str
         Raster filename.
+
     features : bool
         Crop by foreach features. False: crop global, True: crop individual.
 
     Yields
     ------
-    image : array
+    data : array
         Raster data.
 
-    transform : affine
+    affine : affine
         Raster affine transform.
+
+    meta : metadata
+        Raster metadata.
     """
     if features:
         for geometry in geometries:
             shapes = [geometry]
-            with rasterio.open(raster) as source:
-                image, transform = rasterio.mask.mask(source, shapes, crop = True)
+            dataset = mask(shapes, raster)
 
-            yield image, transform
+            yield dataset
     else:
         shapes = [geometry for geometry in geometries]
-        with rasterio.open(raster) as source:
-            image, transform = rasterio.mask.mask(source, shapes, crop = True)
+        dataset = mask(shapes, raster)
 
-        yield image, transform
+        yield dataset

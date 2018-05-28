@@ -8,7 +8,7 @@
     :synopsis: Tests of the crop the raster datasets for vector geometries.
 .. moduleauthor:: Andre Rocha <rocha.matcomp@gmail.com>
 """
-
+import affine
 import fiona
 import rasterio
 import src.rocha.crop as crop
@@ -43,7 +43,6 @@ def test_geometry():
     """
     Test vector geometry.
     """
-
     vector = "data/regions.shp"
     subvectors = ["data/region_mid-west.shp", "data/region_northeast.shp", "data/region_southeast.shp", "data/region_south.shp"]
 
@@ -55,32 +54,64 @@ def test_geometry():
 
         assert feature["geometry"] == geometry
 
+def test_mask():
+    """
+    Test crop raster for vector extern boundary.
+    """
+    vector = "data/regions.shp"
+    raster = "data/forest.tif"
+
+    geometries = crop.geometries(vector)
+    shapes = [geometry for geometry in geometries]
+    result, profile = crop.mask(shapes, raster)
+
+    with rasterio.open(raster, 'r') as source:
+        data = source.read(1)
+        metadata = source.profile.copy()
+
+        transform = metadata['transform']
+        metadata.update({'transform': affine.Affine.from_gdal(transform[0],
+                                                              transform[1],
+                                                              transform[2],
+                                                              transform[3],
+                                                              transform[4],
+                                                              transform[5])})
+
+    assert result.all() == data.all()
+    assert profile == metadata
+
 def test_crop_global():
     """
     Test crop raster for vector extern boundary.
     """
-
     vector = "data/regions.shp"
     raster = "data/forest.tif"
 
     geometries = crop.geometries(vector)
     results = crop.crop(geometries, raster, features = False)
 
-    result, transform = next(results)
+    result, profile = next(results)
 
     with rasterio.open(raster) as source:
         data = source.read(1)
-        affine = source.affine
+        metadata = source.profile.copy()
+
+        transform = metadata['transform']
+        metadata.update({'transform': affine.Affine.from_gdal(transform[0],
+                                                              transform[1],
+                                                              transform[2],
+                                                              transform[3],
+                                                              transform[4],
+                                                              transform[5])})
 
     assert result.all() == data.all()
-    assert transform == affine
+    assert profile == metadata
 
 
 def test_crop_individual():
     """
     Test crop raster for each vector feature boundary.
     """
-
     vector = "data/regions.shp"
     raster = "data/forest.tif"
     subrasters = ["data/forest_mid-west.tif", "data/forest_northeast.tif", "data/forest_southeast.tif", "data/forest_south.tif"]
@@ -88,10 +119,18 @@ def test_crop_individual():
     geometries = crop.geometries(vector)
     results = crop.crop(geometries, raster, features = True)
 
-    for subraster, (result, transform) in zip(subrasters, results):
+    for subraster, (result, profile) in zip(subrasters, results):
         with rasterio.open(subraster) as source:
             data = source.read(1)
-            affine = source.affine
+            metadata = source.profile.copy()
+
+            transform = metadata['transform']
+            metadata.update({'transform': affine.Affine.from_gdal(transform[0],
+                                                                transform[1],
+                                                                transform[2],
+                                                                transform[3],
+                                                                transform[4],
+                                                                transform[5])})
 
         assert result.all() == data.all()
-        assert transform == affine
+        assert profile == metadata
