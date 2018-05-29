@@ -43,11 +43,11 @@ def output(input_file, input_path, output_path, change = True, extra = None, beg
     Parameters
     ----------
     input_file : str
-        Input filename
+        Input filename.
     input_path : str
-        Path from input file
+        Path from input file.
     output_path : str
-        Path to output file
+        Path to output file.
     change : bool
         Change the directory structure.
 

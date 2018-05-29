@@ -13,6 +13,9 @@ import fiona
 import rasterio
 import rasterio.mask
 
+from rocha import paths
+from rocha import drivers
+
 def properties(vector, layer = 0):
     """
     Vector property data.
@@ -69,7 +72,6 @@ def mask(geometries, raster):
     ----------
     geometries : str
         Vector geometries.
-
     raster : str
         Raster filename.
 
@@ -77,7 +79,6 @@ def mask(geometries, raster):
     -------
     data : array
         Raster data.
-
     profile : dict
         Raster profile.
     """
@@ -133,3 +134,68 @@ def crop(geometries, raster, features = False):
         dataset = mask(shapes, raster)
 
         yield dataset
+
+def multiples(vector, column, pattern, input_path, output_path, driver = 'GTiff'):
+    """
+    Crop the multiples rasters for each vector features.
+
+    Find the rasters files by pattern and crops these by all features of the vector.
+    The vector column name defines the property value to connect the raster output filenames with
+    the vector features, in the end of those filenames.
+
+    Parameters
+    ----------
+    vector : str
+        Vector filename.
+    column : str
+        Column name.
+    pattern : str
+        Pattern like unix shell-style wildcards.
+    input_path : str
+        Path from raster input files.
+    output_path : str
+        Path to cropped raster output files.
+    driver : str
+        Driver code. Default GeoTIFF file format (GTiff).
+        Code to output raster format.
+
+    Yields
+    ------
+    data : array
+        Raster data.
+    profile : dict
+        Raster profile.
+    output_file : str
+        Raster output filename.
+
+    Notes
+    -----
+        The information of the GDAL raster formats, including the drivers codes,
+        are available in: http://www.gdal.org/formats_list.html
+    """
+    # Vector geometries and properties as lists
+    geoms = [geometry for geometry in geometries(vector)]
+    props = [property for property in properties(vector)]
+
+    # Raster files like pattern
+    rasters = paths.find(input_path, pattern)
+
+    for raster in rasters:
+
+        print(f'\nInput file: {raster}')
+        dataset = crop(geoms, raster, features = True)
+
+        print('Output files:')
+        for property, (data, profile) in zip(props, dataset):
+
+            # Update the driver and file extension
+            profile.update({'driver': driver})
+            extension = f'.{drivers.extension(driver)}'
+
+            # Vector column property as file label
+            label = f'_{property[column]}'.lower()
+
+            output_file = paths.output(raster, input_path, output_path, extra = label, output_extension = extension)
+            print(output_file)
+
+            yield data, profile, output_file

@@ -9,7 +9,7 @@
 .. moduleauthor:: Andre Rocha <rocha.matcomp@gmail.com>
 """
 import os
-import src.rocha.paths as paths
+from rocha import paths
 
 def test_full_path():
     """
@@ -17,11 +17,11 @@ def test_full_path():
     """
     path = 'data'
     pattern = '*region*.shp'
-    files = ['data/region_mid-west.shp',
-             'data/region_northeast.shp',
-             'data/region_southeast.shp',
-             'data/region_south.shp',
-             'data/regions.shp']
+    files = ['data/regions.shp',
+             'data/output/region_mid-west.shp',
+             'data/output/region_northeast.shp',
+             'data/output/region_southeast.shp',
+             'data/output/region_south.shp']
 
     current = os.getcwd()
     filenames = [os.sep.join([current, file]) for file in files]
@@ -37,11 +37,11 @@ def test_relative_path():
     """
     path = 'data'
     pattern = '*region*.shp'
-    filenames = ['data/region_mid-west.shp',
-                 'data/region_northeast.shp',
-                 'data/region_southeast.shp',
-                 'data/region_south.shp',
-                 'data/regions.shp']
+    filenames = ['data/regions.shp',
+                 'data/output/region_mid-west.shp',
+                 'data/output/region_northeast.shp',
+                 'data/output/region_southeast.shp',
+                 'data/output/region_south.shp']
 
     results = paths.find(path, pattern, relative = True)
     names = [name for name in results]

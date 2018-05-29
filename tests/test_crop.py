@@ -11,7 +11,7 @@
 import affine
 import fiona
 import rasterio
-import src.rocha.crop as crop
+from rocha import crop
 
 def test_column_string():
     """
@@ -44,7 +44,10 @@ def test_geometry():
     Test vector geometry.
     """
     vector = "data/regions.shp"
-    subvectors = ["data/region_mid-west.shp", "data/region_northeast.shp", "data/region_southeast.shp", "data/region_south.shp"]
+    subvectors = ["data/output/region_mid-west.shp",
+                  "data/output/region_northeast.shp",
+                  "data/output/region_southeast.shp",
+                  "data/output/region_south.shp"]
 
     geometries = crop.geometries(vector)
 
@@ -93,7 +96,7 @@ def test_crop_global():
     result, profile = next(results)
 
     with rasterio.open(raster) as source:
-        data = source.read(1)
+        data = source.read()
         metadata = source.profile.copy()
 
         transform = metadata['transform']
@@ -114,14 +117,17 @@ def test_crop_individual():
     """
     vector = "data/regions.shp"
     raster = "data/forest.tif"
-    subrasters = ["data/forest_mid-west.tif", "data/forest_northeast.tif", "data/forest_southeast.tif", "data/forest_south.tif"]
+    subrasters = ["data/output/forest_mid-west.tif",
+                  "data/output/forest_northeast.tif",
+                  "data/output/forest_southeast.tif",
+                  "data/output/forest_south.tif"]
 
     geometries = crop.geometries(vector)
     results = crop.crop(geometries, raster, features = True)
 
     for subraster, (result, profile) in zip(subrasters, results):
         with rasterio.open(subraster) as source:
-            data = source.read(1)
+            data = source.read()
             metadata = source.profile.copy()
 
             transform = metadata['transform']
@@ -134,3 +140,38 @@ def test_crop_individual():
 
         assert result.all() == data.all()
         assert profile == metadata
+
+def test_multiples():
+    """
+    Test the multiples crops.
+    """
+    input_path = 'data'
+    output_path = 'data/output'
+    pattern = '*forest.tif'
+    vector = 'data/regions.shp'
+    driver = 'GTiff'
+    column = 'REGION'
+
+    subrasters = ["data/output/forest_mid-west.tif",
+                  "data/output/forest_northeast.tif",
+                  "data/output/forest_southeast.tif",
+                  "data/output/forest_south.tif"]
+
+    results = crop.multiples(vector, column, pattern, input_path, output_path, driver)
+
+    for subraster, (result, profile, filename) in zip(subrasters, results):
+        with rasterio.open(subraster) as source:
+            data = source.read()
+            metadata = source.profile.copy()
+
+            transform = metadata['transform']
+            metadata.update({'transform': affine.Affine.from_gdal(transform[0],
+                                                                transform[1],
+                                                                transform[2],
+                                                                transform[3],
+                                                                transform[4],
+                                                                transform[5])})
+
+        assert result.all() == data.all()
+        assert profile == metadata
+        assert filename == subraster
