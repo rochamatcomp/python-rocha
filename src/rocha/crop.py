@@ -181,11 +181,8 @@ def multiples(vector, column, pattern, input_path, output_path, driver = 'GTiff'
     rasters = paths.find(input_path, pattern)
 
     for raster in rasters:
-
-        print(f'\nInput file: {raster}')
         dataset = crop(geoms, raster, features = True)
 
-        print('Output files:')
         for property, (data, profile) in zip(props, dataset):
 
             # Update the driver and file extension
@@ -196,6 +193,5 @@ def multiples(vector, column, pattern, input_path, output_path, driver = 'GTiff'
             label = f'_{property[column]}'.lower()
 
             output_file = paths.output(raster, input_path, output_path, extra = label, output_extension = extension)
-            print(output_file)
 
             yield data, profile, output_file

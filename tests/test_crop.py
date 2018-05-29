@@ -68,8 +68,8 @@ def test_mask():
     shapes = [geometry for geometry in geometries]
     result, profile = crop.mask(shapes, raster)
 
-    with rasterio.open(raster, 'r') as source:
-        data = source.read(1)
+    with rasterio.open(raster) as source:
+        data = source.read()
         metadata = source.profile.copy()
 
         transform = metadata['transform']
