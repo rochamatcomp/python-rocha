@@ -36,7 +36,7 @@ def find(path, pattern, relative = True):
             else:
                 yield os.path.abspath(os.sep.join([root, name]))
 
-def output(input_file, input_path, output_path, change = True, extra = None, begin = False):
+def output(input_file, input_path, output_path, change = True, extra = None, begin = False, output_extension = None):
     """
     Output filename from input filename.
 
@@ -60,20 +60,26 @@ def output(input_file, input_path, output_path, change = True, extra = None, beg
 
         False: extra name in the ending (default).
         True: extra name in the beginning.
+    output_extension : str
+        Output file extension.
     """
-    if extra is None:
-        filename = input_file
-    else:
-        name, extension = os.path.splitext(os.path.basename(input_file))
+    name, input_extension = os.path.splitext(input_file)
+    dirname, basename = os.path.split(name)
 
+    extension = output_extension if output_extension else input_extension
+
+    if extra is None:
+        filename = f'{basename}{extension}'
+    else:
         if begin:
-            filename = f'{extra}{name}{extension}'
+            filename = f'{extra}{basename}{extension}'
         else:
-            filename = f'{name}{extra}{extension}'
+            filename = f'{basename}{extra}{extension}'
 
     if change:
-        output_file = os.sep.join([output_path, os.path.basename(filename)])
+        output_file = os.sep.join([output_path, filename])
     else:
-        output_file = filename.replace(input_path, output_path)
+        root = dirname.replace(input_path, output_path)
+        output_file = os.sep.join([root, filename])
 
     return output_file

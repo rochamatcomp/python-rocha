@@ -76,9 +76,9 @@ def test_output_change_root():
 
     assert result == output_file
 
-def test_output_extra_end():
+def test_output_change_extra_end():
     """
-    Test output filename with the extra name in the ending.
+    Test output filename with the extra name in the ending, and changed strutucture.
     """
     input_path = 'data/inputs'
     output_path = 'data/outputs'
@@ -90,9 +90,9 @@ def test_output_extra_end():
 
     assert result == output_file
 
-def test_output_extra_begin():
+def test_output_change_extra_begin():
     """
-    Test output filename with the extra name in the beginning.
+    Test output filename with the extra name in the beginning, and changed strutucture.
     """
     input_path = 'data/inputs'
     output_path = 'data/outputs'
@@ -101,5 +101,61 @@ def test_output_extra_begin():
     extra = 'south_'
 
     result = paths.output(input_file, input_path, output_path, change = True, extra = extra, begin = True)
+
+    assert result == output_file
+
+def test_output_same_extra_end():
+    """
+    Test output filename with the extra name in the ending, and the same strutucture.
+    """
+    input_path = 'data/inputs'
+    output_path = 'data/outputs'
+    input_file = 'data/inputs/south/raster.tif'
+    output_file = 'data/outputs/south/raster_south.tif'
+    extra = '_south'
+
+    result = paths.output(input_file, input_path, output_path, change = False, extra = extra, begin = False)
+
+    assert result == output_file
+
+def test_output_same_extra_begin():
+    """
+    Test output filename with the extra name in the beginning, and the same strutucture.
+    """
+    input_path = 'data/inputs'
+    output_path = 'data/outputs'
+    input_file = 'data/inputs/south/raster.tif'
+    output_file = 'data/outputs/south/south_raster.tif'
+    extra = 'south_'
+
+    result = paths.output(input_file, input_path, output_path, change = False, extra = extra, begin = True)
+
+    assert result == output_file
+
+def test_output_change_extension():
+    """
+    Test output filename with another extension, and changed strutucture.
+    """
+    input_path = 'data/inputs'
+    output_path = 'data/outputs'
+    input_file = 'data/inputs/south/raster.tif'
+    output_file = 'data/outputs/raster.asc'
+    extension = '.asc'
+
+    result = paths.output(input_file, input_path, output_path, change = True, output_extension = extension)
+
+    assert result == output_file
+
+def test_output_same_extension():
+    """
+    Test output filename with another extension, and the same strutucture.
+    """
+    input_path = 'data/inputs'
+    output_path = 'data/outputs'
+    input_file = 'data/inputs/south/raster.tif'
+    output_file = 'data/outputs/south/raster.asc'
+    extension = '.asc'
+
+    result = paths.output(input_file, input_path, output_path, change = False, output_extension = extension)
 
     assert result == output_file
