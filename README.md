@@ -17,7 +17,7 @@ PyData is a community for developers and users of Open Source Data Tools.
 
 Anaconda is a downloadable, free, open source, high-performance and optimized Python and R distribution.
 
-[Conda](https://conda.io/docs/_images/conda_logo.svg)](https://conda.io/docs/user-guide/install/index.html)
+[![Conda](https://conda.io/docs/_images/conda_logo.svg)](https://conda.io/docs/user-guide/install/index.html)
 
 Conda is a powerful package and environment manager.
 
