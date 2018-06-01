@@ -10,6 +10,9 @@
 """
 import operator
 import numpy.ma as ma
+import rasterio
+from rasterio.warp import calculate_default_transform
+
 
 def hotspots(dataset, relate, threshold, nodata):
     """
@@ -60,3 +63,54 @@ def hotspots(dataset, relate, threshold, nodata):
     data = ma.masked_where(selection, dataset)
 
     return data
+
+def area(raster, crs = None, factor = 1):
+    """"
+    Calculate the raster valid area.
+
+    The coordinate system defines the area unit.
+    For the geographic coordinates the default unit is the square degree.
+    For the projected coordinates the default unit is the square meter.
+
+    Parameters
+    ----------
+    raster : str
+        Raster filename
+    crs : str
+        Coordinate reference system code.
+    factor : int or float
+        Multiplicative factor to the area.
+
+
+    Notes
+    -----
+    The CRS code can be accesible from:
+    """
+    with rasterio.open(raster) as source:
+
+        # Define the affine matrix transform
+        if crs is None:
+            transform = source.profile['affine']
+        else:
+            destiny_crs = rasterio.crs.CRS({'init': crs})
+
+            if destiny_crs == source.crs:
+                transform = source.profile['affine']
+            else:
+                # Reproject
+                transform, _, _ = calculate_default_transform(source.crs,
+                                                            destiny_crs,
+                                                            source.width,
+                                                            source.height,
+                                                            *source.bounds)
+
+    # Pixel width (pixel resolution of the abscissa axis)
+    xres = transform[0]
+
+    # Pixel height (pixel resolution of the ordinate axis)
+    yres = transform[4]
+
+    # Area in square unit (approximate by reprojection)
+    area = abs(xres * yres) * factor
+
+    return round(area, 15)

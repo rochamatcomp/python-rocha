@@ -32,3 +32,53 @@ def test_hotspot():
         data = source.read(masked = True)
 
     assert result.all() == data.all()
+
+def test_area_geographic():
+    """
+    Test area for geographic coordinate system as square degrees.
+    """
+    raster = 'data/geographic.tif'
+    area = 0.25
+
+    result = extremes.area(raster)
+
+    assert result == area
+
+def test_area_projected():
+    """
+    Test area for projected coordinate system as square meters.
+    """
+    raster = 'data/projected.tif'
+    area = 2970864583.066144
+
+    result = extremes.area(raster)
+
+    assert result == area
+
+def test_area_reprojected():
+    """
+    Test area for reprojected coordinate system as square meters.
+    """
+    raster = 'data/geographic.tif'
+    area = 2970864583.066144
+
+     # Reproject SIRGAS 2000 Project 23S
+    crs = 'EPSG:31983'
+
+    result = extremes.area(raster, crs)
+
+    assert result == area
+
+def test_area_reprojected_factor():
+    """
+    Test area for reprojected coordinate system as square kilometers.
+    """
+    raster = 'data/geographic.tif'
+    area = 2970.864583066144
+
+     # Reproject SIRGAS 2000 Project 23S
+    crs = 'EPSG:31983'
+
+    result = extremes.area(raster, crs, 1e-6)
+
+    assert result == area
