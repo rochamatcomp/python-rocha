@@ -12,7 +12,7 @@ import rasterio
 import numpy as np
 import numpy.ma as ma
 
-from rocha import extremes
+from src.rocha import extremes
 
 def test_hotspot():
     """

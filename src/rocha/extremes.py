@@ -10,7 +10,6 @@
 """
 import operator
 import numpy.ma as ma
-from rocha import paths
 
 def hotspots(dataset, relate, threshold, nodata):
     """

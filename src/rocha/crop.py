@@ -13,8 +13,8 @@ import fiona
 import rasterio
 import rasterio.mask
 
-from rocha import paths
-from rocha import drivers
+from . import paths
+from . import drivers
 
 def properties(vector, layer = 0):
     """

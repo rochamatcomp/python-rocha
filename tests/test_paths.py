@@ -9,7 +9,7 @@
 .. moduleauthor:: Andre Rocha <rocha.matcomp@gmail.com>
 """
 import os
-from rocha import paths
+from src.rocha import paths
 
 def test_full_path():
     """

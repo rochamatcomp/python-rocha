@@ -11,7 +11,8 @@
 import affine
 import fiona
 import rasterio
-from rocha import crop
+
+from src.rocha import crop
 
 def test_column_string():
     """

@@ -9,7 +9,8 @@
 .. moduleauthor:: Andre Rocha <rocha.matcomp@gmail.com>
 """
 import pytest
-from rocha import drivers
+
+from src.rocha import drivers
 
 def test_valid_driver():
     """
