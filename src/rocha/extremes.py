@@ -48,12 +48,15 @@ def hotspots(dataset, relate, threshold, nodata):
     if relate not in operations_inverse:
         return None
 
-    # Define the compare operation
+    # Define the compare inverse operation
     compare = operations_inverse[relate]
 
-    # Fill out the data masked with nodata value and mask the raster dataset, by comparison with threshold
-    dataset[compare(dataset, threshold)] = nodata
+    # Define the selection data by comparison with threshold
+    selection = compare(dataset, threshold)
+
+    # Fill out the selected data with nodata value and mask the raster dataset
+    dataset[selection] = nodata
     dataset.fill_value = nodata
-    data = ma.masked_where(compare(dataset, threshold), dataset)
+    data = ma.masked_where(selection, dataset)
 
     return data
