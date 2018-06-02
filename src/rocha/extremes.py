@@ -64,6 +64,60 @@ def hotspots(dataset, relate, threshold, nodata):
 
     return data
 
+def transform(raster, crs = None):
+    """
+    Affine transformation for the raster file by coordinate reference system code.
+
+    Parameters
+    ----------
+    raster : str
+        Raster filename
+    crs : str
+        Coordinate reference system code.
+
+    Notes
+    -----
+    The CRS code can be accesible from:
+
+    SIRGAS 2000 geographic
+    http://spatialreference.org/ref/epsg/4674/
+
+    WGS 84 geographic
+    http://spatialreference.org/ref/epsg/4326/
+
+
+    SIRGAS 2000 projected
+
+    EPSG:31965: SIRGAS 2000 / UTM zone 11N, ... , EPSG:31976: SIRGAS 2000 / UTM zone 22N
+    EPSG:31977: SIRGAS 2000 / UTM zone 17S, ... , EPSG:31985: SIRGAS 2000 / UTM zone 25S
+
+    WGS 84 projected
+
+    EPSG:32601: WGS 84 / UTM zone 1N, ... , EPSG:32660: WGS 84 / UTM zone 60N
+    EPSG:32701: WGS 84 / UTM zone 1S, ... , EPSG:32760: WGS 84 / UTM zone 60S
+    """
+    width = None
+    height = None
+
+    with rasterio.open(raster) as source:
+        # Define the affine matrix transform
+        if crs is None:
+            transform = source.profile['affine']
+        else:
+            destiny_crs = rasterio.crs.CRS({'init': crs})
+
+            if destiny_crs == source.crs:
+                transform = source.profile['affine']
+            else:
+                # Reproject
+                transform, width, height = calculate_default_transform(source.crs,
+                                                            destiny_crs,
+                                                            source.width,
+                                                            source.height,
+                                                            *source.bounds)
+
+    return transform, width, height
+
 def area(raster, crs = None, factor = 1):
     """"
     Calculate the raster valid area.
@@ -80,37 +134,47 @@ def area(raster, crs = None, factor = 1):
         Coordinate reference system code.
     factor : int or float
         Multiplicative factor to the area.
-
-
-    Notes
-    -----
-    The CRS code can be accesible from:
     """
-    with rasterio.open(raster) as source:
-
-        # Define the affine matrix transform
-        if crs is None:
-            transform = source.profile['affine']
-        else:
-            destiny_crs = rasterio.crs.CRS({'init': crs})
-
-            if destiny_crs == source.crs:
-                transform = source.profile['affine']
-            else:
-                # Reproject
-                transform, _, _ = calculate_default_transform(source.crs,
-                                                            destiny_crs,
-                                                            source.width,
-                                                            source.height,
-                                                            *source.bounds)
+    affine, _, _ = transform(raster, crs)
 
     # Pixel width (pixel resolution of the abscissa axis)
-    xres = transform[0]
+    xres = affine[0]
 
     # Pixel height (pixel resolution of the ordinate axis)
-    yres = transform[4]
+    yres = affine[4]
 
     # Area in square unit (approximate by reprojection)
     area = abs(xres * yres) * factor
 
     return round(area, 15)
+
+def total(raster, crs = None, factor = 1):
+    """
+    Calcule the total valid area.
+
+    Parameters
+    ----------
+    raster : str
+        Raster filename
+    crs : str
+        Coordinate reference system code.
+    factor : int or float
+        Multiplicative factor to the area.
+    """
+    square = area(raster, crs, factor)
+
+    affine, width, height = transform(raster, crs)
+
+    with rasterio.open(raster) as source:
+        dataset = source.read(masked = True)
+        profile = source.profile.copy()
+
+    print(width, height, affine, profile)
+
+    # Raster valid values
+    data = dataset[~dataset.mask]
+    count = len(data)
+
+    total = count * square
+
+    return total

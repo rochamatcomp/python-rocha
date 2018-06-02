@@ -76,9 +76,62 @@ def test_area_reprojected_factor():
     raster = 'data/geographic.tif'
     area = 2970.864583066144
 
-     # Reproject SIRGAS 2000 Project 23S
+    # Reproject SIRGAS 2000 Project 23S
     crs = 'EPSG:31983'
 
     result = extremes.area(raster, crs, 1e-6)
 
     assert result == area
+
+def test_area_reprojected_file():
+    """
+    Test area for reprojected coordinate system as square meters by file.
+    """
+    projected = 'data/projected.tif'
+    geographic = 'data/geographic.tif'
+    area = 2970864583.066144
+
+    # Reproject SIRGAS 2000 Project 23S
+    crs = 'EPSG:31983'
+
+    area = extremes.area(projected)
+    result = extremes.area(geographic, crs)
+
+    assert result == area
+
+def test_total_geographic():
+    """
+    Test total valid area for geographic coordinate system as square degrees.
+    """
+    raster = 'data/hotspots_geographic.tif'
+    total = 26.5
+
+    result = extremes.total(raster)
+
+    assert result == total
+
+def test_total_projected():
+    """
+    Test total valid area for projected coordinate system as square meters.
+    """
+    raster = 'data/hotspots_projected.tif'
+    total = 317882510388.0774
+
+    result = extremes.total(raster)
+
+    assert result == total
+
+def test_total_reprojected():
+    """
+    Test total valid area for reprojected file as square meters.
+    """
+    raster = 'data/hotspots_geographic.tif'
+    #total = 317882510388.0774
+    total = 314911645805.0113 # Don't reproject data, just area.
+
+    # Reproject SIRGAS 2000 Project 23S
+    crs = 'EPSG:31983'
+
+    result = extremes.total(raster, crs)
+
+    assert result == total
