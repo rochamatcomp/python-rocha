@@ -9,10 +9,10 @@
 .. moduleauthor:: Andre Rocha <rocha.matcomp@gmail.com>
 """
 import operator
+import numpy as np
 import numpy.ma as ma
 import rasterio
 from rasterio.warp import calculate_default_transform
-
 
 def hotspots(dataset, relate, threshold, nodata):
     """
@@ -167,9 +167,6 @@ def total(raster, crs = None, factor = 1):
 
     with rasterio.open(raster) as source:
         dataset = source.read(masked = True)
-        profile = source.profile.copy()
-
-    print(width, height, affine, profile)
 
     # Raster valid values
     data = dataset[~dataset.mask]
@@ -178,3 +175,58 @@ def total(raster, crs = None, factor = 1):
     total = count * square
 
     return total
+
+def limits(rasters, band = 1):
+    """
+    Rasters minimum and maximum individuals values.
+
+    Parameters
+    ----------
+    rasters : list
+        Raster filenames.
+    band : int
+        Raster band.
+
+    Yields
+    ------
+    value_min : int or float
+        Raster minimum value.
+    value_max : int or float
+        Raster maximum value.
+    """
+    for raster in rasters:
+        with rasterio.open(raster) as source:
+            dataset = source.read(band, masked = True)
+
+        value_min = np.min(dataset)
+        value_max = np.max(dataset)
+
+        yield value_min, value_max
+
+
+def min_max(rasters, band = 1):
+    """
+    Rasters global minimum and maximum values.
+
+    Parameters
+    ----------
+    rasters : list
+        Raster filenames.
+    band : int
+        Raster band.
+
+    Returns
+    -------
+    result_min : int or float
+        Global rasters minimum value.
+    result_max : int or float
+        Global rasters maximum value.
+    """
+    values = limits(rasters, band)
+    results = [(value_min, value_max) for value_min, value_max in values]
+    results_min, results_max = zip(*results)
+
+    result_min = min(results_min)
+    result_max = max(results_max)
+
+    return result_min, result_max

@@ -12,6 +12,7 @@ import rasterio
 import numpy as np
 import numpy.ma as ma
 
+from src.rocha import paths
 from src.rocha import extremes
 
 def test_hotspot():
@@ -135,3 +136,61 @@ def test_total_reprojected():
     result = extremes.total(raster, crs)
 
     assert result == total
+
+def test_limits():
+    """
+    Test rasters minimum and maximum values for each file.
+    """
+    values_min = [-47.164523294078,
+                 -38.156690778818,
+                 -49.476265733386,
+                 -67.341787619557,
+                 -58.670952135006,
+                 -81.968584509983,
+                 -40.882100744325,
+                 -48.449972234068,
+                 -42.138962499961,
+                 -30.837406733355,
+                 -49.920177880745,
+                 -56.948878267812]
+
+    values_max = [29.552618422328,
+                 68.555008124737,
+                 33.18806002876,
+                 -10.30071953103,
+                 0.78961871286549,
+                 6.5030381149153,
+                 55.246224002166,
+                 69.638073392539,
+                 94.044943529601,
+                 84.034367323136,
+                 69.26120559526,
+                 86.193456962634]
+
+    path = 'data/relatives'
+    pattern = '*.tif'
+
+    rasters = paths.find(path, pattern)
+
+    results = [result for result in extremes.limits(rasters)]
+    results_min, results_max = zip(*results)
+
+    np.testing.assert_allclose(sorted(results_min), sorted(values_min))
+    np.testing.assert_allclose(sorted(results_max), sorted(values_max))
+
+def test_min_max():
+    """
+    Test rasters minimum and maximum values for all files.
+    """
+    value_min = -81.968584509983
+    value_max = 94.044943529601
+
+    path = 'data/relatives'
+    pattern = '*.tif'
+
+    rasters = paths.find(path, pattern)
+
+    result_min, result_max = extremes.min_max(rasters)
+
+    np.testing.assert_allclose(result_min, value_min)
+    np.testing.assert_allclose(result_max, value_max)
