@@ -9,13 +9,15 @@
 .. moduleauthor:: Andre Rocha <rocha.matcomp@gmail.com>
 """
 import rasterio
+from rasterio.plot import show
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from . import extremes
 
-def maps(rasters, rows, cols, color, title, subtitles, labels, band = 1, figsize = (12, 12)):
+def maps(rasters, rows, cols, title, subtitles, labels, color, bar, band = 1, figsize = (12, 12)):
     """
     Plot the rasters files as image maps.
 
@@ -33,10 +35,20 @@ def maps(rasters, rows, cols, color, title, subtitles, labels, band = 1, figsize
         Subplot subtitles in the first row.
     labels : list of str
         Coordinate axis labels in the first column.
+    color : str
+        Color name.
     band : int
         Raster band.
     figsize : tuple of int
         Figure size as (width, height) in inches.
+    color : :class:`matplotlib.colors.Colormap` object
+
+    bar : str
+        Colorbar position as `last`, `all` or `global`
+
+    Returns
+    -------
+    figure : :class:`matplotlib.figure.Figure` object.
     """
     figure, axes = plt.subplots(rows, cols, sharex = True, sharey = True, figsize = figsize)
 
@@ -47,21 +59,59 @@ def maps(rasters, rows, cols, color, title, subtitles, labels, band = 1, figsize
 
     for subplot, raster in enumerate(rasters):
         with rasterio.open(raster) as source:
-            dataset = source.read(band, masked = True)
+            # Axis to the subplot.
+            row = subplot // cols
+            col = subplot % cols
+            axis = axes[row, col]
 
-        # Axis to the subplot.
-        row = subplot // cols
-        col = subplot % cols
-        axis = axes[row, col]
+            show(source, ax = axis, cmap = color, norm = norm)
 
-        image = axis.imshow(dataset, cmap = color, norm = norm)
-
-    # Colorbar axis position and size by list [left, bottom, width, height].
-    colorbar_axis = figure.add_axes([0.20, 0.05, 0.60, 0.02])
-    figure.colorbar(image, cax = colorbar_axis, extend = 'both', orientation = 'horizontal')
-
+    colorbar(figure, axes, bar)
     configuration(figure, axes, title, subtitles, labels)
 
+    return figure
+
+
+def colorbar(figure, axes, bar):
+    """
+    Colorbar whose height or width in sync with the master axes.
+
+    Parameters
+    ----------
+    figure : :class:`matplotlib.figure.Figure` object.
+
+    axis : :class:`matplotlib.axes.Axes` object.
+
+    bar : str
+        Colorbar position as `last`, `all` or `global`
+    """
+    if bar == 'last':
+        for axis in axes[:, -1]:
+            # Subplot colorbar just for the last column
+            images = axis.images
+
+            if len(images) > 0:
+                figure.colorbar(images[0], ax = axis, extend = 'both', orientation = 'vertical')
+    elif bar == 'all':
+        for row in axes:
+            for axis in row:
+                images = axis.images
+
+                if len(images) > 0:
+                    figure.colorbar(images[0], ax = axis, extend = 'both', orientation = 'vertical')
+    elif bar == 'global':
+        # Colorbar axis position and size by list [left, bottom, width, height]
+        colorbar_axis = figure.add_axes([0.20, 0.05, 0.60, 0.02])
+
+        if len(axes) > 0 and len(axes[0]) > 0:
+            # Color and scale references from first image
+            axis = axes[0][0]
+            images = axis.images
+
+            if len(images) > 0:
+                figure.colorbar(images[0], cax = colorbar_axis, extend = 'both', orientation = 'horizontal')
+    else:
+        print('Warning: colorbar reference must be last, all or global.')
 
 def configuration(figure, axes, title, subtitles, labels):
     """
@@ -87,5 +137,5 @@ def configuration(figure, axes, title, subtitles, labels):
         axis.set_title(subtitle, fontweight = 'bold')
 
     for axis, label in zip(axes[:, 0], labels):
-        # Subplot coordinate axis label just the first column
+        # Subplot coordinate axis label just for the first column
         axis.set_ylabel(label, size='large', fontweight = 'bold')
